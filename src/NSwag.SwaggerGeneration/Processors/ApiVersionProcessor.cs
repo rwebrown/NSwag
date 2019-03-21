@@ -91,6 +91,7 @@ namespace NSwag.SwaggerGeneration.Processors
             var operationDescription = context.OperationDescription;
             operationDescription.Path = operationDescription.Path.Replace("{version:apiVersion}", version);
             operationDescription.Path = operationDescription.Path.Replace("{version}", version);
+            operationDescription.Operation.OperationId = $"{operationDescription.Operation.OperationId} {version.Replace('.','-')}";
         }
 
         private string[] GetVersions(OperationProcessorContext context, string attributeType)
