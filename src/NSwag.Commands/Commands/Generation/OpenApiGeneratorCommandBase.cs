@@ -220,7 +220,7 @@ namespace NSwag.Commands.Generation
         public async Task<TSettings> CreateSettingsAsync(AssemblyLoader.AssemblyLoader assemblyLoader, IServiceProvider serviceProvider, string workingDirectory)
         {
             var mvcOptions = serviceProvider?.GetRequiredService<IOptions<MvcOptions>>().Value;
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
             JsonSerializerSettings serializerSettings;
             try
             {
@@ -307,7 +307,7 @@ namespace NSwag.Commands.Generation
                     }
                     else
                     {
-#if NETCOREAPP3_0
+#if NETCOREAPP3_0 || NETCOREAPP3_1
                         method =
                             programType.GetRuntimeMethod("CreateHostBuilder", new[] { typeof(string[]) }) ??
                             programType.GetRuntimeMethod("CreateHostBuilder", new Type[0]);

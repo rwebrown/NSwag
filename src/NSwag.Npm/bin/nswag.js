@@ -18,6 +18,7 @@ args = args.replace("--core 2.0", "/runtime:NetCore20");
 args = args.replace("--core 2.1", "/runtime:NetCore21");
 args = args.replace("--core 2.2", "/runtime:NetCore22");
 args = args.replace("--core 3.0", "/runtime:NetCore30");
+args = args.replace("--core 3.1", "/runtime:NetCore31");
 args = args.replace("--core", "/runtime:NetCore" + defaultCoreVersion);
 
 // Search for full .NET installation

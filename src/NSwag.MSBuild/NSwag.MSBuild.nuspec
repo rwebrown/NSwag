@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>SIS.NSwag.MSBuild</id>
-    <version>1.2.0</version>
+    <version>1.2.3</version>
     <authors>SIS Devs</authors>
     <owners>SIS Devs</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -30,5 +30,6 @@
     <file src="..\NSwag.ConsoleCore\bin\release\netcoreapp2.1\Publish\**" target="tools/NetCore21" />
     <file src="..\NSwag.ConsoleCore\bin\release\netcoreapp2.2\Publish\**" target="tools/NetCore22" />
     <file src="..\NSwag.ConsoleCore\bin\release\netcoreapp3.0\Publish\**" target="tools/NetCore30" />
+    <file src="..\NSwag.ConsoleCore\bin\release\netcoreapp3.1\Publish\**" target="tools/NetCore31" />
   </files>
 </package>
