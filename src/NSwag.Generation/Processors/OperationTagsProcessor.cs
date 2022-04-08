@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Namotion.Reflection;
+using NSwag.Generation.Collections;
 using NSwag.Generation.Processors.Contexts;
 
 namespace NSwag.Generation.Processors
@@ -20,22 +21,28 @@ namespace NSwag.Generation.Processors
         /// <summary>Processes the specified method information.</summary>
         /// <param name="context"></param>
         /// <returns>true if the operation should be added to the Swagger specification.</returns>
-        public bool Process(OperationProcessorContext context)
+        public virtual bool Process(OperationProcessorContext context)
         {
-            ProcessSwaggerTagsAttribute(context.Document, context.OperationDescription, context.MethodInfo);
-            ProcessSwaggerTagAttributes(context.Document, context.OperationDescription, context.MethodInfo);
-
-            if (!context.OperationDescription.Operation.Tags.Any())
+            if (context.MethodInfo != null)
             {
-                var typeInfo = context.ControllerType.GetTypeInfo();
-
-                ProcessControllerSwaggerTagsAttribute(context.OperationDescription, typeInfo);
-                ProcessControllerSwaggerTagAttributes(context.OperationDescription, typeInfo);
+                ProcessSwaggerTagsAttribute(context.Document, context.OperationDescription, context.MethodInfo);
+                ProcessSwaggerTagAttributes(context.Document, context.OperationDescription, context.MethodInfo);
             }
 
-            if (!context.OperationDescription.Operation.Tags.Any())
+            if (context.ControllerType != null)
             {
-                AddControllerNameTag(context);
+                if (!context.OperationDescription.Operation.Tags.Any())
+                {
+                    var typeInfo = context.ControllerType.GetTypeInfo();
+
+                    ProcessControllerSwaggerTagsAttribute(context.OperationDescription, typeInfo);
+                    ProcessControllerSwaggerTagAttributes(context.OperationDescription, typeInfo);
+                }
+
+                if (!context.OperationDescription.Operation.Tags.Any())
+                {
+                    AddControllerNameTag(context);
+                }
             }
 
             return true;
@@ -51,7 +58,27 @@ namespace NSwag.Generation.Processors
                 controllerName = controllerName.Substring(0, controllerName.Length - 10);
             }
 
+            var summary = context.ControllerType.GetXmlDocsSummary(context.Settings.ResolveExternalXmlDocumentation);
             context.OperationDescription.Operation.Tags.Add(controllerName);
+            UpdateDocumentTagDescription(context, controllerName, summary);
+        }
+
+        /// <summary>
+        /// Sets the description for the given controller on the document.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <param name="tagName">The tag name.</param>
+        /// <param name="description">The description.</param>
+        protected void UpdateDocumentTagDescription(OperationProcessorContext context, string tagName, string description)
+        {
+            if (!context.Settings.UseControllerSummaryAsTagDescription || string.IsNullOrEmpty(description))
+            {
+                return;
+            }
+
+            var documentTag = context.Document.Tags.SingleOrNew(tag => tag.Name == tagName);
+            documentTag.Name = tagName;
+            documentTag.Description = description;
         }
 
         private void ProcessSwaggerTagAttributes(OpenApiDocument document, OpenApiOperationDescription operationDescription, MethodInfo methodInfo)

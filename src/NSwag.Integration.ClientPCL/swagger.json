@@ -1,5 +1,5 @@
-﻿{
-  "x-generator": "NSwag v13.3.0.0 (NJsonSchema v10.1.11.0 (Newtonsoft.Json v11.0.0.0))",
+{
+  "x-generator": "NSwag v13.15.5.0 (NJsonSchema v10.6.6.0 (Newtonsoft.Json v11.0.0.0))",
   "info": {
     "title": "Swagger specification",
     "version": "1.0.0"
@@ -25,7 +25,6 @@
           {
             "name": "location",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/GeoPoint"
             },
@@ -78,7 +77,6 @@
           {
             "name": "points",
             "in": "body",
-            "required": true,
             "schema": {
               "type": "array",
               "items": {
@@ -231,7 +229,6 @@
           {
             "name": "request",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/GenericRequestOfAddressAndPerson"
             },
@@ -341,7 +338,6 @@
           {
             "name": "person",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/Person"
             },
@@ -492,7 +488,6 @@
           {
             "name": "person",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/Person"
             },
@@ -593,7 +588,6 @@
           {
             "name": "person",
             "in": "body",
-            "required": true,
             "schema": {
               "type": "string",
               "x-nullable": true
@@ -619,16 +613,16 @@
         ],
         "operationId": "Persons_Upload",
         "consumes": [
-          "application/octet-stream"
+          "application/octet-stream",
+          "multipart/form-data"
         ],
         "parameters": [
           {
             "name": "data",
             "in": "body",
-            "required": true,
             "schema": {
               "type": "string",
-              "format": "byte",
+              "format": "binary",
               "x-nullable": true
             },
             "x-nullable": true

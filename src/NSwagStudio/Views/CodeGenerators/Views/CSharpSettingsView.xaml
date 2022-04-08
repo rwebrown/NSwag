@@ -26,6 +26,11 @@
                     <TextBlock Text="Generate optional schema properties (not required) as nullable properties" TextWrapping="Wrap" />
                 </CheckBox>
 
+                <CheckBox IsChecked="{Binding Command.GenerateNullableReferenceTypes, Mode=TwoWay}" 
+                          ToolTip="GenerateNullableReferenceTypes" Margin="0,0,0,12">
+                    <TextBlock Text="Generate Nullable Reference Type (NRT) annotations (C# 8)" TextWrapping="Wrap" />
+                </CheckBox>
+
                 <TextBlock Text="Excluded Type Names (comma separated, must be defined in another namespace)." FontWeight="Bold" Margin="0,0,0,6" />
                 <TextBox Text="{Binding Command.ExcludedTypeNames, Mode=TwoWay, Converter={StaticResource StringArrayConverter}, ConverterParameter=','}" 
                          ToolTip="ExcludedTypeNames" Margin="0,0,0,12" />
@@ -91,6 +96,11 @@
 
                 <GroupBox Header="Serialization" Margin="0,0,0,12">
                     <StackPanel Margin="4,8,4,-8">
+                        <TextBlock Text="JSON Library ('System.Text.Json' is experimental/incomplete!)" FontWeight="Bold" Margin="0,0,0,6" />
+                        <ComboBox SelectedItem="{Binding Command.JsonLibrary, Mode=TwoWay}" 
+                                  ToolTip="JsonLibrary"
+                                  ItemsSource="{Binding JsonLibraries}" Margin="0,0,0,12" />
+                        
                         <CheckBox IsChecked="{Binding Command.RequiredPropertiesMustBeDefined, Mode=TwoWay}" ToolTip="RequiredPropertiesMustBeDefined" Margin="0,0,0,12">
                             <TextBlock Text="Required properties must be defined in JSON (sets Required.Always when the property is required)" TextWrapping="Wrap" />
                         </CheckBox>
