@@ -161,6 +161,14 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.GenerateSyncMethods = value; }
         }
 
+        [Argument(Name = "GeneratePrepareRequestAndProcessResponseAsAsyncMethods", IsRequired = false,
+                  Description = "Specifies whether to generate PrepareRequest and ProcessResponse methods as asynchronous methods (if true, both must be defined in the base class or in the partial class, default: false).")]
+        public bool GeneratePrepareRequestAndProcessResponseAsAsyncMethods
+        {
+            get { return Settings.GeneratePrepareRequestAndProcessResponseAsAsyncMethods; }
+            set { Settings.GeneratePrepareRequestAndProcessResponseAsAsyncMethods = value; }
+        }
+
         [Argument(Name = nameof(ExposeJsonSerializerSettings), IsRequired = false,
             Description = "Specifies whether to expose the JsonSerializerSettings property (default: false).")]
         public bool ExposeJsonSerializerSettings
@@ -255,26 +263,21 @@ namespace NSwag.Commands.CodeGeneration
 
         public async Task<Dictionary<string, string>> RunAsync()
         {
-            return await Task.Run(async () =>
-            {
-                var document = await GetInputSwaggerDocument().ConfigureAwait(false);
-                var clientGenerator = new CSharpClientGenerator(document, Settings);
+            var document = await GetInputSwaggerDocument().ConfigureAwait(false);
+            var clientGenerator = new CSharpClientGenerator(document, Settings);
 
-                if (GenerateContractsOutput)
-                {
-                    var result = new Dictionary<string, string>();
-                    GenerateContracts(result, clientGenerator);
-                    GenerateImplementation(result, clientGenerator);
-                    return result;
-                }
-                else
-                {
-                    return new Dictionary<string, string>
-                    {
-                        { OutputFilePath ?? "Full", clientGenerator.GenerateFile(ClientGeneratorOutputType.Full) }
-                    };
-                }
-            });
+            if (GenerateContractsOutput)
+            {
+                var result = new Dictionary<string, string>();
+                GenerateContracts(result, clientGenerator);
+                GenerateImplementation(result, clientGenerator);
+                return result;
+            }
+
+            return new Dictionary<string, string>
+            {
+                { OutputFilePath ?? "Full", clientGenerator.GenerateFile(ClientGeneratorOutputType.Full) }
+            };
         }
 
         private void GenerateImplementation(Dictionary<string, string> result, CSharpClientGenerator clientGenerator)

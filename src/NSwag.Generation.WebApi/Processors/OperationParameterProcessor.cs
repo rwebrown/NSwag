@@ -184,6 +184,16 @@ namespace NSwag.Generation.WebApi.Processors
                 {
                     operationParameter.Position = position;
                     position++;
+
+                    if (_settings.SchemaType == SchemaType.OpenApi3)
+                    {
+                        operationParameter.IsNullableRaw = null;
+                    }
+
+                    if (operationParameter.Name != contextualParameter.ParameterInfo.Name)
+                    {
+                        operationParameter.OriginalName = contextualParameter.ParameterInfo.Name;
+                    }
                     
                     ((Dictionary<ParameterInfo, OpenApiParameter>)context.Parameters)[contextualParameter.ParameterInfo] = operationParameter;
                 }
@@ -310,7 +320,7 @@ namespace NSwag.Generation.WebApi.Processors
         private OpenApiParameter AddFileParameter(OperationProcessorContext context, ContextualParameterInfo contextualParameter, bool isFileArray)
         {
             // TODO: Check if there is a way to control the property name
-            var parameterDocumentation = contextualParameter.GetDescription();
+            var parameterDocumentation = contextualParameter.GetDescription(_settings);
             var operationParameter = context.DocumentGenerator.CreatePrimitiveParameter(
                 contextualParameter.Name, parameterDocumentation, contextualParameter);
 
@@ -345,7 +355,8 @@ namespace NSwag.Generation.WebApi.Processors
             OpenApiParameter operationParameter;
 
             var typeDescription = _settings.ReflectionService.GetDescription(contextualParameter, _settings);
-            var isNullable = _settings.AllowNullableBodyParameters && typeDescription.IsNullable;
+            var isRequired = _settings.AllowNullableBodyParameters == false || contextualParameter.ContextAttributes.FirstAssignableToTypeNameOrDefault("RequiredAttribute", TypeNameStyle.Name) != null;
+            var isNullable = _settings.AllowNullableBodyParameters && (typeDescription.IsNullable && !isRequired);
 
             var operation = context.OperationDescription.Operation;
             if (contextualParameter.TypeName == "XmlDocument" || contextualParameter.Type.InheritsFromTypeName("XmlDocument", TypeNameStyle.Name))
@@ -361,8 +372,8 @@ namespace NSwag.Generation.WebApi.Processors
                         IsNullableRaw = isNullable
                     },
                     IsNullableRaw = isNullable,
-                    IsRequired = contextualParameter.ParameterInfo.HasDefaultValue == false,
-                    Description = contextualParameter.GetDescription()
+                    IsRequired = isRequired,
+                    Description = contextualParameter.GetDescription(_settings)
                 };
                 operation.Parameters.Add(operationParameter);
             }
@@ -380,8 +391,8 @@ namespace NSwag.Generation.WebApi.Processors
                         IsNullableRaw = isNullable
                     },
                     IsNullableRaw = isNullable,
-                    IsRequired = contextualParameter.ParameterInfo.HasDefaultValue == false,
-                    Description = contextualParameter.GetDescription()
+                    IsRequired = isRequired,
+                    Description = contextualParameter.GetDescription(_settings)
                 };
                 operation.Parameters.Add(operationParameter);
             }
@@ -391,9 +402,9 @@ namespace NSwag.Generation.WebApi.Processors
                 {
                     Name = name,
                     Kind = OpenApiParameterKind.Body,
-                    IsRequired = true, // FromBody parameters are always required
+                    IsRequired = isRequired,
                     IsNullableRaw = isNullable,
-                    Description = contextualParameter.GetDescription(),
+                    Description = contextualParameter.GetDescription(_settings),
                     Schema = context.SchemaGenerator.GenerateWithReferenceAndNullability<JsonSchema>(
                         contextualParameter, isNullable, schemaResolver: context.SchemaResolver)
                 };
@@ -410,7 +421,7 @@ namespace NSwag.Generation.WebApi.Processors
 
             if (typeDescription.Type.HasFlag(JsonObjectType.Array))
             {
-                var parameterDocumentation = contextualParameter.GetDescription();
+                var parameterDocumentation = contextualParameter.GetDescription(_settings);
                 var operationParameter = context.DocumentGenerator.CreatePrimitiveParameter(
                     name, parameterDocumentation, contextualParameter);
 
@@ -442,13 +453,13 @@ namespace NSwag.Generation.WebApi.Processors
                             propertyName = fromHeaderAttribute?.Name;
                         }
 
-                        var propertySummary = contextualProperty.PropertyInfo.GetXmlDocsSummary();
-                        var operationParameter = context.DocumentGenerator.CreatePrimitiveParameter(propertyName, propertySummary, contextualProperty);
+                        var propertySummary = contextualProperty.PropertyInfo.GetXmlDocsSummary(_settings.ResolveExternalXmlDocumentation);
+                        var operationParameter = context.DocumentGenerator.CreatePrimitiveParameter(propertyName, propertySummary, contextualProperty.AccessorType);
 
                         // TODO: Check if required can be controlled with mechanisms other than RequiredAttribute
 
-                        var parameterInfo = _settings.ReflectionService.GetDescription(contextualProperty, _settings);
-                        var isFileArray = IsFileArray(contextualProperty.Type, parameterInfo);
+                        var parameterInfo = _settings.ReflectionService.GetDescription(contextualProperty.AccessorType, _settings);
+                        var isFileArray = IsFileArray(contextualProperty.AccessorType.Type, parameterInfo);
 
                         if (parameterInfo.Type == JsonObjectType.File || isFileArray)
                         {
