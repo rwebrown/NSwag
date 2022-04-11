@@ -28,7 +28,7 @@
 {%     if InjectHttpClient -%}
         _httpClient = httpClient;
 {%     endif -%}
-{% elseif UseBaseUrl and HasBaseUrl == false -%}
+{% elsif UseBaseUrl and HasBaseUrl == false -%}
     public {{ Class }}({% if InjectServiceFabric %}System.Uri{% else %}string{% endif %} baseUrl{% if InjectServiceFabric -%}, Microsoft.ServiceFabric.Services.Communication.Client.ICustomServicePartitionClientFactory clientFactory{% endif %}{% if InjectHttpClient -%}, {{ HttpClientType }} httpClient{% endif %})
     {
         _baseUrl = baseUrl; 
@@ -38,7 +38,7 @@
 {%     if InjectServiceFabric -%}
 		ClientFactory = clientFactory ?? throw new System.ArgumentNullException(nameof(clientFactory));
 {%     endif -%}
-{% elseif InjectHttpClient -%}
+{% elsif InjectHttpClient -%}
     public {{ Class }}({{ HttpClientType }} httpClient)
     {
         _httpClient = httpClient;
@@ -190,7 +190,7 @@
         var client_ = _httpClient;
 {%     elsif UseHttpClientCreationMethod -%}
         var client_ = await CreateHttpClientAsync(cancellationToken).ConfigureAwait(false);
-{%     elseif InjectServiceFabric == false -%}
+{%     else InjectServiceFabric == false -%}
         var client_ = new {{ HttpClientType }}();
 {%     endif -%}
 {%     if InjectHttpClient == false and DisposeHttpClient -%}
