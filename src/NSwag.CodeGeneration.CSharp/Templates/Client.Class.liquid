@@ -190,7 +190,7 @@
         var client_ = _httpClient;
 {%     elsif UseHttpClientCreationMethod -%}
         var client_ = await CreateHttpClientAsync(cancellationToken).ConfigureAwait(false);
-{%     else InjectServiceFabric == false -%}
+{%     elsif InjectServiceFabric == false -%}
         var client_ = new {{ HttpClientType }}();
 {%     endif -%}
 {%     if InjectHttpClient == false and DisposeHttpClient -%}
