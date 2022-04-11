@@ -19,9 +19,13 @@ namespace NSwag.Commands
         [JsonProperty("output", NullValueHandling = NullValueHandling.Include)]
         public string OutputFilePath { get; set; }
 
+        [Argument(Name = "NewLineBehavior", IsRequired = false, Description = "The new line behavior (Auto (OS default), CRLF, LF).")]
+        [JsonProperty("newLineBehavior", NullValueHandling = NullValueHandling.Include)]
+        public NewLineBehavior NewLineBehavior { get; set; } = NewLineBehavior.Auto;
+
         public abstract Task<object> RunAsync(CommandLineProcessor processor, IConsoleHost host);
 
-        protected async Task<OpenApiDocument> ReadSwaggerDocumentAsync(string input)
+        protected Task<OpenApiDocument> ReadSwaggerDocumentAsync(string input)
         {
             if (!IsJson(input) && !IsYaml(input))
             {
@@ -30,11 +34,11 @@ namespace NSwag.Commands
                     if (input.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ||
                         input.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
                     {
-                        return await OpenApiYamlDocument.FromUrlAsync(input).ConfigureAwait(false);
+                        return OpenApiYamlDocument.FromUrlAsync(input);
                     }
                     else
                     {
-                        return await OpenApiDocument.FromUrlAsync(input).ConfigureAwait(false);
+                        return OpenApiDocument.FromUrlAsync(input);
                     }
                 }
                 else
@@ -42,11 +46,11 @@ namespace NSwag.Commands
                     if (input.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ||
                         input.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
                     {
-                        return await OpenApiYamlDocument.FromFileAsync(input).ConfigureAwait(false);
+                        return OpenApiYamlDocument.FromFileAsync(input);
                     }
                     else
                     {
-                        return await OpenApiDocument.FromFileAsync(input).ConfigureAwait(false);
+                        return OpenApiDocument.FromFileAsync(input);
                     }
                 }
             }
@@ -54,11 +58,11 @@ namespace NSwag.Commands
             {
                 if (IsYaml(input))
                 {
-                    return await OpenApiYamlDocument.FromYamlAsync(input).ConfigureAwait(false);
+                    return OpenApiYamlDocument.FromYamlAsync(input);
                 }
                 else
                 {
-                    return await OpenApiDocument.FromJsonAsync(input).ConfigureAwait(false);
+                    return OpenApiDocument.FromJsonAsync(input);
                 }
             }
         }
@@ -75,17 +79,17 @@ namespace NSwag.Commands
 
         protected Task<bool> TryWriteFileOutputAsync(IConsoleHost host, Func<string> generator)
         {
-            return OutputCommandExtensions.TryWriteFileOutputAsync(this, host, generator);
+            return OutputCommandExtensions.TryWriteFileOutputAsync(this, host, NewLineBehavior, generator);
         }
 
         protected Task<bool> TryWriteDocumentOutputAsync(IConsoleHost host, Func<OpenApiDocument> generator)
         {
-            return OutputCommandExtensions.TryWriteDocumentOutputAsync(this, host, generator);
+            return OutputCommandExtensions.TryWriteDocumentOutputAsync(this, host, NewLineBehavior, generator);
         }
 
         protected Task<bool> TryWriteFileOutputAsync(string path, IConsoleHost host, Func<string> generator)
         {
-            return OutputCommandExtensions.TryWriteFileOutputAsync(this, path, host, generator);
+            return OutputCommandExtensions.TryWriteFileOutputAsync(this, path, host, NewLineBehavior, generator);
         }
     }
 }

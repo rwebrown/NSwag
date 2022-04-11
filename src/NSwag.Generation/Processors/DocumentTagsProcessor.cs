@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Namotion.Reflection;
+using NSwag.Generation.Collections;
 using NSwag.Generation.Processors.Contexts;
 
 namespace NSwag.Generation.Processors
@@ -30,9 +31,11 @@ namespace NSwag.Generation.Processors
 
         private static void ProcessTagsAttribute(OpenApiDocument document, Type controllerType)
         {
-            dynamic tagsAttribute = controllerType.ToCachedType()
-                .TypeAttributes
+            dynamic tagsAttribute = controllerType
+                .ToCachedType()
+                .InheritedAttributes
                 .FirstAssignableToTypeNameOrDefault("SwaggerTagsAttribute", TypeNameStyle.Name);
+
             if (tagsAttribute != null)
             {
                 var tags = ((string[])tagsAttribute.Tags)
@@ -60,7 +63,8 @@ namespace NSwag.Generation.Processors
         private static void ProcessTagAttributes(OpenApiDocument document, Type controllerType)
         {
             var tagAttributes = controllerType
-                .ToCachedType().TypeAttributes
+                .ToCachedType()
+                .InheritedAttributes
                 .GetAssignableToTypeName("SwaggerTagAttribute", TypeNameStyle.Name)
                 .Select(a => (dynamic)a)
                 .ToArray();
@@ -76,18 +80,7 @@ namespace NSwag.Generation.Processors
 
         internal static void ProcessTagAttribute(OpenApiDocument document, dynamic tagAttribute)
         {
-            if (document.Tags == null)
-            {
-                document.Tags = new List<OpenApiTag>();
-            }
-
-            var tag = document.Tags.SingleOrDefault(t => t.Name == tagAttribute.Name);
-            if (tag == null)
-            {
-                tag = new OpenApiTag();
-                document.Tags.Add(tag);
-            }
-
+            var tag = document.Tags.SingleOrNew(t => t.Name == tagAttribute.Name);
             tag.Description = tagAttribute.Description;
             tag.Name = tagAttribute.Name;
 

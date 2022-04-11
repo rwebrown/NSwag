@@ -109,7 +109,7 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.RxJsVersion = value; }
         }
 
-        [Argument(Name = "DateTimeType", IsRequired = false, Description = "The date time type ('Date', 'MomentJS', 'OffsetMomentJS', 'string').")]
+        [Argument(Name = "DateTimeType", IsRequired = false, Description = "The date time type ('Date', 'MomentJS', 'Luxon', 'DayJS', 'OffsetMomentJS', 'string').")]
         public TypeScriptDateTimeType DateTimeType
         {
             get { return Settings.TypeScriptGeneratorSettings.DateTimeType; }
@@ -270,7 +270,7 @@ namespace NSwag.Commands.CodeGeneration
             get { return Settings.TypeScriptGeneratorSettings.EnumStyle; }
             set { Settings.TypeScriptGeneratorSettings.EnumStyle = value; }
         }
-        
+
         [Argument(Name = "UseLeafType", IsRequired = false, Description = "Generate leaf types for an object with discriminator (default: false).")]
         public bool UseLeafType
         {
@@ -366,6 +366,13 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.QueryNullValue = value; }
         }
 
+        [Argument(Name = "UseAbortSignal", IsRequired = false, Description = "Specifies whether to use the AbortSignal (Fetch/Aurelia template only, default: false).")]
+        public bool UseAbortSignal
+        {
+            get { return Settings.UseAbortSignal; }
+            set { Settings.UseAbortSignal = value; }
+        }
+
         [Argument(Name = "InlineNamedDictionaries", Description = "Inline named dictionaries (default: false).", IsRequired = false)]
         public bool InlineNamedDictionaries
         {
@@ -380,6 +387,13 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.TypeScriptGeneratorSettings.InlineNamedAny = value; }
         }
 
+        [Argument(Name = "IncludeHttpContext", IsRequired = false, Description = "Gets a value indicating whether to include the httpContext (Angular template only, default: false).")]
+        public bool IncludeHttpContext
+        {
+            get { return Settings.IncludeHttpContext; }
+            set { Settings.IncludeHttpContext = value; }
+        }
+
         public override async Task<object> RunAsync(CommandLineProcessor processor, IConsoleHost host)
         {
             var code = await RunAsync();
@@ -389,20 +403,17 @@ namespace NSwag.Commands.CodeGeneration
 
         public async Task<string> RunAsync()
         {
-            return await Task.Run(async () =>
+            var additionalCode = ExtensionCode ?? string.Empty;
+            if (DynamicApis.FileExists(additionalCode))
             {
-                var additionalCode = ExtensionCode ?? string.Empty;
-                if (DynamicApis.FileExists(additionalCode))
-                {
-                    additionalCode = DynamicApis.FileReadAllText(additionalCode);
-                }
+                additionalCode = DynamicApis.FileReadAllText(additionalCode);
+            }
 
-                Settings.TypeScriptGeneratorSettings.ExtensionCode = additionalCode;
+            Settings.TypeScriptGeneratorSettings.ExtensionCode = additionalCode;
 
-                var document = await GetInputSwaggerDocument().ConfigureAwait(false);
-                var clientGenerator = new TypeScriptClientGenerator(document, Settings);
-                return clientGenerator.GenerateFile();
-            });
+            var document = await GetInputSwaggerDocument().ConfigureAwait(false);
+            var clientGenerator = new TypeScriptClientGenerator(document, Settings);
+            return clientGenerator.GenerateFile();
         }
     }
 }

@@ -238,6 +238,13 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.CSharpGeneratorSettings.ClassStyle = value; }
         }
 
+        [Argument(Name = "JsonLibrary", IsRequired = false, Description = "The CSharp JSON library, 'NewtonsoftJson' or 'SystemTextJson' (default: 'NewtonsoftJson', 'SystemTextJson' is experimental).")]
+        public CSharpJsonLibrary JsonLibrary
+        {
+            get { return Settings.CSharpGeneratorSettings.JsonLibrary; }
+            set { Settings.CSharpGeneratorSettings.JsonLibrary = value; }
+        }
+
         [Argument(Name = "GenerateDefaultValues", IsRequired = false, Description = "Specifies whether to generate default values for properties (may generate CSharp 6 code, default: true).")]
         public bool GenerateDefaultValues
         {
@@ -338,6 +345,14 @@ namespace NSwag.Commands.CodeGeneration
         {
             get { return Settings.CSharpGeneratorSettings.GenerateOptionalPropertiesAsNullable; }
             set { Settings.CSharpGeneratorSettings.GenerateOptionalPropertiesAsNullable = value; }
+        }
+
+        [Argument(Name = "GenerateNullableReferenceTypes", IsRequired = false, Description = "Specifies whether whether to " +
+            "generate Nullable Reference Type annotations (default: false).")]
+        public bool GenerateNullableReferenceTypes
+        {
+            get { return Settings.CSharpGeneratorSettings.GenerateNullableReferenceTypes; }
+            set { Settings.CSharpGeneratorSettings.GenerateNullableReferenceTypes = value; }
         }
     }
 }
