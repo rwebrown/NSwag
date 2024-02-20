@@ -213,8 +213,11 @@
         var disposeClient_ = false;
 {%     endif -%}
 {%     if InjectServiceFabric -%}
+{%       if UseStringInterpolation -%}
+        var url_ = $"{% if UseBaseUrl and InjectServiceFabric == false -%}{BaseUrl}{% endif -%}{{ operation.Path }}{% if operation.HasQueryParameters %}?{% for parameter in operation.QueryParameters %}{{ parameter.Name }}={ {{ parameter.VariableName }} }{% if forloop.last == false %}&{% endif %}{% endfor %}{% endif %}";
+{%       else -%}
         var urlBuilder_ = new System.Text.StringBuilder();
-{% if UseBaseUrl %}if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);{% endif %}
+        {% if UseBaseUrl %}if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);{% endif %}
         // Operation Path: "{{ operation.Path }}"
 {%     if operation.Path contains "{" -%}
 {%        assign pathParts = operation.Path | split: "{" -%}
@@ -273,7 +276,7 @@
 {%         endfor -%}
         urlBuilder_.Length--;
 {%     endif -%}
-        
+{%     endif -%}
         var serviceClient = ClientFactory.GetCustomServicePartitionClient(_baseUrl, _paritionKey, _listenerName, _authorization);
         var response = await serviceClient.{{operation.HttpMethodLower | capitalize}}Async({% if UseStringInterpolation -%}url_{% else -%}urlBuilder_.ToString(){% endif -%}{% if operation.HasContent -%}, {{ operation.ContentParameter.VariableName }}{% endif -%}, enableLocalDev);
 
