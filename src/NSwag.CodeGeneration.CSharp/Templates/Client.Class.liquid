@@ -518,22 +518,12 @@
                 var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                 try
                 {
-                    var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
-                    foreach (var item_ in response_.Headers)
-                        headers_[item_.Key] = item_.Value;
-                    if (response_.Content != null && response_.Content.Headers != null)
-                    {
-                        foreach (var item_ in response_.Content.Headers)
-                            headers_[item_.Key] = item_.Value;
-                    }
-
 {% if GeneratePrepareRequestAndProcessResponseAsAsyncMethods %}
                     await ProcessResponseAsync(client_, response_, cancellationToken).ConfigureAwait(false);
 {% else %}
                     ProcessResponse(client_, response_);
 {% endif %}
                     return response_;
-{%     endif -%}
                 }
                 finally
                 {
@@ -549,65 +539,75 @@
 {% endif -%}
     }{% comment  %} End Async HttpResponse {% endcomment %}
 
-{% template Client.Method.Documentation %}{% comment  %} BEGIN Async Response {% endcomment %}
-{% template Client.Method.Annotations %}
-/// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+{%   if operation.WrapResponse -%}
+    {% template Client.Method.Documentation %}{% comment  %} BEGIN Async Response {% endcomment %}
+    {% template Client.Method.Annotations %}
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
 {%   if InjectServiceFabric -%}
-/// <param name="enableLocalDev">Specifies the call should go to localdev.</param>
+    /// <param name="enableLocalDev">Specifies the call should go to localdev.</param>
 {%   endif -%}
-{{ operation.MethodAccessModifier }} async {{ operation.WrappedResultType }} {{ operation.ActualOperationName }}ResponseAsync({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}, {% endfor %}System.Threading.CancellationToken cancellationToken{% if GenerateOptionalParameters %} = default(System.Threading.CancellationToken){% endif %}{% if InjectServiceFabric %}, bool enableLocalDev = true{% endif %})
-{
+    {{ operation.MethodAccessModifier }} async {{ operation.WrappedResultType }} {{ operation.ActualOperationName }}ResponseAsync({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}, {% endfor %}System.Threading.CancellationToken cancellationToken{% if GenerateOptionalParameters %} = default(System.Threading.CancellationToken){% endif %}{% if InjectServiceFabric %}, bool enableLocalDev = true{% endif %})
+    {
 {%     for parameter in operation.PathParameters -%}
 {%         if parameter.IsNullable == false and parameter.IsRequired -%}
-    if ({{ parameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ parameter.VariableName }}");
+        if ({{ parameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ parameter.VariableName }}");
 
 {%         endif -%}
 {%     endfor -%}
 {%     for parameter in operation.QueryParameters -%}
 {%         if parameter.IsNullable == false and parameter.IsRequired -%}
-    if ({{ parameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ parameter.VariableName }}");
+        if ({{ parameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ parameter.VariableName }}");
 
 {%         endif -%}
 {%     endfor -%}
 {%     if operation.HasContent and operation.ContentParameter.IsRequired -%}
-    if ({{ operation.ContentParameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ operation.ContentParameter.VariableName }}");
+        if ({{ operation.ContentParameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ operation.ContentParameter.VariableName }}");
 
 {%     endif -%}
 
-    var response_ = await {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}cancellationToken{% if InjectServiceFabric %}, enableLocalDev{% endif %});
-    var disposeResponse_ = true;
-    try
-    {
-        var status_ = (int)response_.StatusCode;
-{%     for response in operation.Responses -%}
-        if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
+        var response_ = await {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}cancellationToken{% if InjectServiceFabric %}, enableLocalDev{% endif %});
+        var disposeResponse_ = true;
+        try
         {
-            {% template Client.Class.ProcessWrappedResponse %}
-        }
-        else
+            var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+            foreach (var item_ in response_.Headers)
+                headers_[item_.Key] = item_.Value;
+            if (response_.Content != null && response_.Content.Headers != null)
+            {
+                foreach (var item_ in response_.Content.Headers)
+                    headers_[item_.Key] = item_.Value;
+            }
+
+            var status_ = (int)response_.StatusCode;
+{%     for response in operation.Responses -%}
+            if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
+            {
+                {% template Client.Class.ProcessWrappedResponse %}
+            }
+            else
 {%     endfor -%}
 {%     if operation.HasDefaultResponse -%}
 {%         if operation.DefaultResponse.HasType -%}
-        {
+            {
 {%             assign response = operation.DefaultResponse -%}
-            {% template Client.Class.ProcessWrappedResponse %}
-        }
+                {% template Client.Class.ProcessWrappedResponse %}
+            }
 {%         elsif operation.HasSuccessResponse -%}
-        {
-            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-            throw new {{ ExceptionClass }}("{{ operation.DefaultResponse.ExceptionDescription }}", status_, responseData_, headers_, null);
-        }
+            {
+                var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new {{ ExceptionClass }}("{{ operation.DefaultResponse.ExceptionDescription }}", status_, responseData_, headers_, null);
+            }
 {%        elsif operation.HasResultType -%}
 {%             if operation.WrapResponse and operation.UnwrappedResultType != "FileResponse" %}
-        return new {{ ResponseClass }}<{{ operation.UnwrappedResultType }}>(status_, headers_, {{ operation.UnwrappedResultDefaultValue }});
+            return new {{ ResponseClass }}<{{ operation.UnwrappedResultType }}>(status_, headers_, {{ operation.UnwrappedResultDefaultValue }});
 {%             else -%}
-        return {{ operation.UnwrappedResultDefaultValue }};
+            return {{ operation.UnwrappedResultDefaultValue }};
 {%             endif -%}
 {%         elsif operation.WrapResponse -%}
-        return new {{ ResponseClass }}(status_, headers_);
+            return new {{ ResponseClass }}(status_, headers_);
 {%         endif -%}
 {%     else -%}
 {%         if operation.HasSuccessResponse == false -%}
@@ -616,87 +616,97 @@ If the success response has already been explicitely declared, there is no need 
 Otherwise, return default values on success because we don't want to throw on "unknown status code".
 Success is always expected
 {%- endcomment %}
-        if (status_ == 200 || status_ == 204)
-        {
+            if (status_ == 200 || status_ == 204)
+            {
 {%             if operation.HasResultType -%}
 {%                 if operation.WrapResponse and operation.UnwrappedResultType != "FileResponse" %}
-            return new {{ ResponseClass }}<{{ operation.UnwrappedResultType }}>(status_, headers_, {{ operation.UnwrappedResultDefaultValue }});
+                return new {{ ResponseClass }}<{{ operation.UnwrappedResultType }}>(status_, headers_, {{ operation.UnwrappedResultDefaultValue }});
 {%                 else -%}
-            return {{ operation.UnwrappedResultDefaultValue }};
+                return {{ operation.UnwrappedResultDefaultValue }};
 {%                 endif -%}
 {%             elsif operation.WrapResponse -%}
-            return new {{ ResponseClass }}(status_, headers_);
+                return new {{ ResponseClass }}(status_, headers_);
 {%             endif -%}
-        }
-        else
+            }
+            else
 {%         endif -%}
-        {
-            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-            throw new {{ ExceptionClass }}("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
-        }
+            {
+                var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new {{ ExceptionClass }}("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+            }
 {%     endif -%}
+        }
+        finally
+        {
+            if (disposeResponse_)
+                response_.Dispose();
+        }
     }
-    finally
-    {
-        if (disposeResponse_)
-            response_.Dispose();
-    }
-{% endif -%}
-}{% comment  %} End Async Response {% endcomment %}
+{% endif %}{% comment  %} End Async Response {% endcomment %}
 
-{% template Client.Method.Documentation %}{% comment  %} BEGIN Async {% endcomment %}
-{% template Client.Method.Annotations %}
-/// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    {% template Client.Method.Documentation %}{% comment  %} BEGIN Async {% endcomment %}
+    {% template Client.Method.Annotations %}
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
 {%   if InjectServiceFabric -%}
-/// <param name="enableLocalDev">Specifies the call should go to localdev.</param>
+    /// <param name="enableLocalDev">Specifies the call should go to localdev.</param>
 {%   endif -%}
-{{ operation.MethodAccessModifier }} async {{ operation.ResultType }} {{ operation.ActualOperationName }}Async({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}, {% endfor %}System.Threading.CancellationToken cancellationToken{% if GenerateOptionalParameters %} = default(System.Threading.CancellationToken){% endif %}{% if InjectServiceFabric %}, bool enableLocalDev = true{% endif %})
-{
+    {{ operation.MethodAccessModifier }} async {{ operation.ResultType }} {{ operation.ActualOperationName }}Async({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}, {% endfor %}System.Threading.CancellationToken cancellationToken{% if GenerateOptionalParameters %} = default(System.Threading.CancellationToken){% endif %}{% if InjectServiceFabric %}, bool enableLocalDev = true{% endif %})
+    {
 {%     for parameter in operation.PathParameters -%}
 {%         if parameter.IsNullable == false and parameter.IsRequired -%}
-    if ({{ parameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ parameter.VariableName }}");
+        if ({{ parameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ parameter.VariableName }}");
 
 {%         endif -%}
 {%     endfor -%}
 {%     for parameter in operation.QueryParameters -%}
 {%         if parameter.IsNullable == false and parameter.IsRequired -%}
-    if ({{ parameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ parameter.VariableName }}");
+        if ({{ parameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ parameter.VariableName }}");
 
 {%         endif -%}
 {%     endfor -%}
 {%     if operation.HasContent and operation.ContentParameter.IsRequired -%}
-    if ({{ operation.ContentParameter.VariableName }} == null)
-        throw new System.ArgumentNullException("{{ operation.ContentParameter.VariableName }}");
+        if ({{ operation.ContentParameter.VariableName }} == null)
+            throw new System.ArgumentNullException("{{ operation.ContentParameter.VariableName }}");
 
 {%     endif -%}
 
-    var response_ = await {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}cancellationToken{% if InjectServiceFabric %}, enableLocalDev{% endif %});
-    var disposeResponse_ = true;
-    try
-    {
-        var status_ = (int)response_.StatusCode;
-{%     for response in operation.Responses -%}
-        if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
+        var response_ = await {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}cancellationToken{% if InjectServiceFabric %}, enableLocalDev{% endif %});
+        var disposeResponse_ = true;
+        try
         {
-            {% template Client.Class.ProcessResponse %}
-        }
-        else
+            var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+            foreach (var item_ in response_.Headers)
+                headers_[item_.Key] = item_.Value;
+            if (response_.Content != null && response_.Content.Headers != null)
+            {
+                foreach (var item_ in response_.Content.Headers)
+                    headers_[item_.Key] = item_.Value;
+            }
+
+            var status_ = (int)response_.StatusCode;
+{%     for response in operation.Responses -%}
+            if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
+            {
+                {% template Client.Class.ProcessResponse %}
+            }
+            else
 {%     endfor -%}
 {%     if operation.HasDefaultResponse -%}
 {%         if operation.DefaultResponse.HasType -%}
-        {
+            {
 {%             assign response = operation.DefaultResponse -%}
-            {% template Client.Class.ProcessResponse %}
-        }
+                {% template Client.Class.ProcessResponse %}
+            }
 {%         elsif operation.HasSuccessResponse -%}
-        {
-            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-            throw new {{ ExceptionClass }}("{{ operation.DefaultResponse.ExceptionDescription }}", status_, responseData_, headers_, null);
-        }
+            {
+                var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new {{ ExceptionClass }}("{{ operation.DefaultResponse.ExceptionDescription }}", status_, responseData_, headers_, null);
+            }
 {%        elsif operation.HasResultType -%}
-        return {{ operation.UnwrappedResultDefaultValue }};
+            return {{ operation.UnwrappedResultDefaultValue }};
+{%        endif -%}
 {%     else -%}
 {%         if operation.HasSuccessResponse == false -%}
 {% comment -%}
@@ -704,31 +714,29 @@ If the success response has already been explicitely declared, there is no need 
 Otherwise, return default values on success because we don't want to throw on "unknown status code".
 Success is always expected
 {%- endcomment %}
-        if (status_ == 200 || status_ == 204)
-        {
+            if (status_ == 200 || status_ == 204)
+            {
 {%             if operation.HasResultType -%}
-            return {{ operation.UnwrappedResultDefaultValue }};
+                return {{ operation.UnwrappedResultDefaultValue }};
 {%             else -%}{% comment %} This method isn't expected to return a value. Just return. {% endcomment %}
-            return;
+                return;
 {%             endif -%}
-        }
-        else
+            }
+            else
 {%         endif -%}
-        {
-            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-            throw new {{ ExceptionClass }}("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
-        }
+            {
+                var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new {{ ExceptionClass }}("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+            }
 {%     endif -%}
-    }
-    finally
-    {
-        if (disposeResponse_)
-            response_.Dispose();
-    }
-{% endif -%}
-}{% comment  %} End Async {% endcomment %}
+        }
+        finally
+        {
+            if (disposeResponse_)
+                response_.Dispose();
+        }
+    }{% comment  %} End Async {% endcomment %}
 {% endfor -%}
-{% if InjectServiceFabric == false %}
     protected struct ObjectResponseResult<T>
     {
         public ObjectResponseResult(T responseObject, string responseText)
@@ -744,7 +752,6 @@ Success is always expected
 
     {% template Client.Class.ReadObjectResponse %}
     {% template Client.Class.Body %}
-{% endif -%}
 {% if UseStringInterpolation == false %}
     {% template Client.Class.ConvertToString %}
 {% endif -%}
