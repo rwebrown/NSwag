@@ -71,7 +71,7 @@ partial class Build : NukeBuild
 
     string DetermineVersionPrefix()
     {
-        var versionPrefix = GitRepository.Tags.SingleOrDefault(x => x.StartsWith("v"))?[1..];
+        var versionPrefix = GitRepository.Tags.SingleOrDefault(x => x.StartsWith("v"))?[1..] ?? Environment.GetEnvironmentVariable("NUGET_PUBLISH_VERSION");
         if (!string.IsNullOrWhiteSpace(versionPrefix))
         {
             IsTaggedBuild = true;
