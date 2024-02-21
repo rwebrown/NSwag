@@ -518,12 +518,22 @@
                 var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                 try
                 {
+                    var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                    foreach (var item_ in response_.Headers)
+                        headers_[item_.Key] = item_.Value;
+                    if (response_.Content != null && response_.Content.Headers != null)
+                    {
+                        foreach (var item_ in response_.Content.Headers)
+                            headers_[item_.Key] = item_.Value;
+                    }
+
 {% if GeneratePrepareRequestAndProcessResponseAsAsyncMethods %}
                     await ProcessResponseAsync(client_, response_, cancellationToken).ConfigureAwait(false);
 {% else %}
                     ProcessResponse(client_, response_);
 {% endif %}
                     return response_;
+{%     endif -%}
                 }
                 finally
                 {
@@ -539,7 +549,6 @@
 {% endif -%}
     }{% comment  %} End Async HttpResponse {% endcomment %}
 
-{%   if operation.WrapResponse -%}
     {% template Client.Method.Documentation %}{% comment  %} BEGIN Async Response {% endcomment %}
     {% template Client.Method.Annotations %}
     /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -572,15 +581,6 @@
         var disposeResponse_ = true;
         try
         {
-            var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
-            foreach (var item_ in response_.Headers)
-                headers_[item_.Key] = item_.Value;
-            if (response_.Content != null && response_.Content.Headers != null)
-            {
-                foreach (var item_ in response_.Content.Headers)
-                    headers_[item_.Key] = item_.Value;
-            }
-
             var status_ = (int)response_.StatusCode;
 {%     for response in operation.Responses -%}
             if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
@@ -641,8 +641,8 @@ Success is always expected
             if (disposeResponse_)
                 response_.Dispose();
         }
-    }
-{% endif %}{% comment  %} End Async Response {% endcomment %}
+{% endif -%}
+    }{% comment  %} End Async Response {% endcomment %}
 
     {% template Client.Method.Documentation %}{% comment  %} BEGIN Async {% endcomment %}
     {% template Client.Method.Annotations %}
@@ -676,15 +676,6 @@ Success is always expected
         var disposeResponse_ = true;
         try
         {
-            var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
-            foreach (var item_ in response_.Headers)
-                headers_[item_.Key] = item_.Value;
-            if (response_.Content != null && response_.Content.Headers != null)
-            {
-                foreach (var item_ in response_.Content.Headers)
-                    headers_[item_.Key] = item_.Value;
-            }
-
             var status_ = (int)response_.StatusCode;
 {%     for response in operation.Responses -%}
             if (status_ == {{ response.StatusCode }}{% if response.CheckChunkedStatusCode %} || status_ == 206{% endif %})
@@ -706,7 +697,6 @@ Success is always expected
             }
 {%        elsif operation.HasResultType -%}
             return {{ operation.UnwrappedResultDefaultValue }};
-{%        endif -%}
 {%     else -%}
 {%         if operation.HasSuccessResponse == false -%}
 {% comment -%}
@@ -735,8 +725,10 @@ Success is always expected
             if (disposeResponse_)
                 response_.Dispose();
         }
+{% endif -%}
     }{% comment  %} End Async {% endcomment %}
 {% endfor -%}
+{% if InjectServiceFabric == false %}
     protected struct ObjectResponseResult<T>
     {
         public ObjectResponseResult(T responseObject, string responseText)
@@ -752,6 +744,7 @@ Success is always expected
 
     {% template Client.Class.ReadObjectResponse %}
     {% template Client.Class.Body %}
+{% endif -%}
 {% if UseStringInterpolation == false %}
     {% template Client.Class.ConvertToString %}
 {% endif -%}
