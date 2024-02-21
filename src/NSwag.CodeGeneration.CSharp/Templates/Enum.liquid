@@ -1,0 +1,31 @@
+{%- if ExtensionData['x-csharp-shared-type'] == null -%}
+{%- if ExtensionData['x-namespace'] != null -%}
+namespace {{ ExtensionData['x-namespace'] }} {
+{%- endif -%}
+{%- if HasDescription -%}
+/// <summary>
+/// {{ Description | csharpdocs }}
+/// </summary>
+{%- endif -%}
+[System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "{{ ToolchainVersion }}")]
+{%- if IsEnumAsBitFlags -%}
+[System.Flags]
+{%- endif -%}
+{{ TypeAccessModifier }} enum {{ ExtensionData['x-type'] | default: Name }}
+{
+{%- for enum in Enums %}
+{%-   if IsStringEnum -%}
+    [System.Runtime.Serialization.EnumMember(Value = @"{{ enum.Value | replace: '"', '""' }}")]
+{%-   endif -%}
+{%- if IsEnumAsBitFlags -%}
+    {{ enum.Name }} = {{ enum.InternalFlagValue }},
+{%- else -%}
+    {{ enum.Name }} = {{ enum.InternalValue }},
+{%- endif -%}
+
+{%- endfor %}
+}
+{%- if ExtensionData['x-namespace'] != null -%}
+}
+{%- endif -%}
+{%- endif -%}
