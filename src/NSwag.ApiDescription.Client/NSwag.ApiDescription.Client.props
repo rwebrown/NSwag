@@ -40,6 +40,7 @@
       <NSwagAdditionalNamespaceUsages>$(NSwagAdditionalNamespaceUsages)</NSwagAdditionalNamespaceUsages>
       <NSwagAdditionalContractNamespaceUsages>$(NSwagAdditionalContractNamespaceUsages)</NSwagAdditionalContractNamespaceUsages>
       <NSwagGenerateOptionalParameters>$(NSwagGenerateOptionalParameters)</NSwagGenerateOptionalParameters>
+	  <NSwagGenerateLegacyMode>$(NSwagGenerateLegacyMode)</NSwagGenerateLegacyMode>
       <NSwagGenerateJsonMethods>$(NSwagGenerateJsonMethods)</NSwagGenerateJsonMethods>
       <NSwagEnforceFlagEnums>$(NSwagEnforceFlagEnums)</NSwagEnforceFlagEnums>
       <NSwagParameterArrayType>$(NSwagParameterArrayType)</NSwagParameterArrayType>
@@ -128,6 +129,7 @@
       <NSwagAdditionalNamespaceUsages>$(NSwagAdditionalNamespaceUsages)</NSwagAdditionalNamespaceUsages>
       <NSwagAdditionalContractNamespaceUsages>$(NSwagAdditionalContractNamespaceUsages)</NSwagAdditionalContractNamespaceUsages>
       <NSwagGenerateOptionalParameters>$(NSwagGenerateOptionalParameters)</NSwagGenerateOptionalParameters>
+	  <NSwagGenerateLegacyMode>$(NSwagGenerateLegacyMode)</NSwagGenerateLegacyMode>
       <NSwagGenerateJsonMethods>$(NSwagGenerateJsonMethods)</NSwagGenerateJsonMethods>
       <NSwagEnforceFlagEnums>$(NSwagEnforceFlagEnums)</NSwagEnforceFlagEnums>
       <NSwagParameterArrayType>$(NSwagParameterArrayType)</NSwagParameterArrayType>

@@ -164,6 +164,7 @@ namespace NSwag.CodeGeneration.CSharp.Models
 
         /// <summary>Gets or sets a value indicating whether to generate service fabric client injection.</summary>
         public bool InjectServiceFabric => _settings.InjectServiceFabric;
+        public bool GenerateLegacyMode => _settings.GenerateLegacyMode;
 
         /// <summary>Gets or sets a value indicating whether to use string interpolation</summary>
         public bool UseStringInterpolation => _settings.UseStringInterpolation;

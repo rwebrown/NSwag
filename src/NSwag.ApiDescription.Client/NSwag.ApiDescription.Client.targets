@@ -130,6 +130,9 @@
         <Command Condition="'%(NSwagGenerateOptionalParameters)' != ''">%(Command) /generateOptionalParameters:%(NSwagGenerateOptionalParameters)</Command>
       </CurrentOpenApiReference>
       <CurrentOpenApiReference>
+	      <Command Condition="'%(NSwagLegacyMode)' != ''">%(Command) /generateLegacyMode:%(NSwagLegacyMode)</Command>
+      </CurrentOpenApiReference>
+      <CurrentOpenApiReference>
         <Command Condition="'%(NSwagGenerateJsonMethods)' != ''">%(Command) /generateJsonMethods:%(NSwagGenerateJsonMethods)</Command>
       </CurrentOpenApiReference>
       <CurrentOpenApiReference>

@@ -149,41 +149,49 @@
 {% endif -%}
 {% for operation in Operations %}
 {%     if GenerateOptionalParameters == false -%}{%  comment  %} Async Optional HttpResponse {% endcomment %}
+{%       if GenerateLegacyMode == false %}
     {% template Client.Method.Documentation %}
     {% template Client.Method.Annotations %}
     {{ operation.MethodAccessModifier }} virtual {{ operation.ResultType }} {{ operation.ActualOperationName }}Async({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
     {
         return {{ operation.ActualOperationName }}Async({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %});
     }
+{%       endif %}
 
     {% template Client.Method.Documentation %}
     {% template Client.Method.Annotations %}
-    {{ operation.MethodAccessModifier }} virtual System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
+    {{ operation.MethodAccessModifier }} virtual System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage> {{ operation.ActualOperationName }}{% if GenerateLegacyMode == false %}HttpResponse{% endif %}Async({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
     {
-        return {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %});
+        return {{ operation.ActualOperationName }}{% if GenerateLegacyMode == false %}HttpResponse{% endif %}Async({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %});
     }
 {%     endif -%}
 {%     if GenerateSyncMethods -%}
+{%       if GenerateLegacyMode == false %}
     {% template Client.Method.Documentation %}
     {% template Client.Method.Annotations %}
     {{ operation.MethodAccessModifier }} virtual {{ operation.SyncResultType }} {{ operation.ActualOperationName }}({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
     {
         {% if operation.HasResult or operation.WrapResponse %}return {% endif %}System.Threading.Tasks.Task.Run(async () => await {{ operation.ActualOperationName }}Async({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %})).GetAwaiter().GetResult();
     }
+{%       endif %}
 
     {% template Client.Method.Documentation %}
     {% template Client.Method.Annotations %}
-    {{ operation.MethodAccessModifier }} virtual System.Net.Http.HttpResponseMessage {{ operation.ActualOperationName }}HttpResponse({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
+    {{ operation.MethodAccessModifier }} virtual System.Net.Http.HttpResponseMessage {{ operation.ActualOperationName }}{% if GenerateLegacyMode == false %}HttpResponse{% endif %}({% for parameter in operation.Parameters %}{{ parameter.Type }} {{ parameter.VariableName }}{% if GenerateOptionalParameters and parameter.IsOptional %} = null{% endif %}{% if parameter.IsLast == false or InjectServiceFabric %}, {% endif %}{% endfor %}{% if InjectServiceFabric %}bool enableLocalDev = true{% endif %})
     {
-        {% if operation.HasResult or operation.WrapResponse %}return {% endif %}System.Threading.Tasks.Task.Run(async () => await {{ operation.ActualOperationName }}HttpResponseAsync({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %})).GetAwaiter().GetResult();
+        {% if operation.HasResult or operation.WrapResponse %}return {% endif %}System.Threading.Tasks.Task.Run(async () => await {{ operation.ActualOperationName }}{% if GenerateLegacyMode == false %}HttpResponse{% endif %}Async({% for parameter in operation.Parameters %}{{ parameter.VariableName }}, {% endfor %}System.Threading.CancellationToken.None{% if InjectServiceFabric %}, enableLocalDev{% endif %})).GetAwaiter().GetResult();
     }
 {%     endif -%}
 {% if InjectServiceFabric %}
 {% template Client.Class.Method.HttpResponseMessage.ServiceFabric %}
+{%   if GenerateLegacyMode == false %}
 {% template Client.Class.Method.ResultType.ServiceFabric %}
+{%   endif %}
 {% else %}
 {% template Client.Class.Method.HttpResponseMessage %}
+{%   if GenerateLegacyMode == false %}
 {% template Client.Class.Method.ResultType %}
+{%   endif %}
 {% endif %}
 
 {% endfor %}

@@ -272,6 +272,13 @@ namespace NSwag.Commands.CodeGeneration
             set { Settings.InjectServiceFabric = value; }
         }
 
+        [Argument(Name = nameof(GenerateLegacyMode), IsRequired = false, Description = "Specifies whether HttpResponse methods should only be generated.")]
+        public bool GenerateLegacyMode
+        {
+            get { return Settings.GenerateLegacyMode; }
+            set { Settings.GenerateLegacyMode = value; }
+        }
+
         [Argument(Name = nameof(UseStringInterpolation), IsRequired = false, Description = "Specifies whether to use string interpolation.")]
         public bool UseStringInterpolation
         {
