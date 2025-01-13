@@ -13,9 +13,12 @@
 {% endif -%}
 {% if UseRequestAndResponseSerializationSettings -%}
     private static System.Lazy<{{ JsonSerializerSettingsType }}> _requestSettings = new System.Lazy<{{ JsonSerializerSettingsType }}>(() => CreateSerializerSettings(true), true);
+    private {{ JsonSerializerSettingsType }} _instanceRequestSettings;
     private static System.Lazy<{{ JsonSerializerSettingsType }}> _responseSettings = new System.Lazy<{{ JsonSerializerSettingsType }}>(() => CreateSerializerSettings(false), true);
+    private {{ JsonSerializerSettingsType }} _instanceResponseSettings;
 {% else -%}
     private static System.Lazy<{{ JsonSerializerSettingsType }}> _settings = new System.Lazy<{{ JsonSerializerSettingsType }}>(CreateSerializerSettings, true);
+    private {{ JsonSerializerSettingsType }} _instanceSettings;
 {% endif -%}
 {% if InjectServiceFabric %}
 	protected Microsoft.ServiceFabric.Services.Communication.Client.ICustomServicePartitionClientFactory ClientFactory { get; }
@@ -45,7 +48,9 @@
 {%     unless constructorParameters == "" -%}{% assign constructorParameters = constructorParameters | append: ", " -%}{% endunless -%}
 {%     assign constructorParameters = constructorParameters | append: HttpClientType | append: " httpClient" -%}
 {% endif -%}
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public {{ Class }}({{ constructorParameters }}){% if HasConfigurationClass and HasBaseClass -%}{{ " : base(configuration)"}}{% endif %}
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
 {%     if UseBaseUrl -%}
 {%         if HasBaseUrl -%}
@@ -81,13 +86,8 @@
 {%     if InjectHttpClient -%}
         _httpClient = httpClient;
 {%     endif -%}
-{% if UseRequestAndResponseSerializationSettings -%}
-        _requestSettings = new System.Lazy<{{ JsonSerializerSettingsType }}>(() => CreateSerializerSettings(true));
-        _responseSettings = new System.Lazy<{{ JsonSerializerSettingsType }}>(() => CreateSerializerSettings(false));
-{% else -%}
-        _settings = new System.Lazy<{{ JsonSerializerSettingsType }}>(CreateSerializerSettings);
-{% endif -%}
-        {% template Client.Class.Constructor %}
+        Initialize();
+    {% template Client.Class.Constructor %}
     }
 
     private static {{ JsonSerializerSettingsType }} CreateSerializerSettings({% if UseRequestAndResponseSerializationSettings %}bool isRequest{% endif %})
@@ -109,7 +109,6 @@
     public {% if InjectServiceFabric %}System.Uri{% else %}string{% endif %} BaseUrl 
     {
         get { return _baseUrl; }
-        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_baseUrl))]
         set
         {
             _baseUrl = value;
@@ -127,10 +126,10 @@
 {%     assign serializerSettingsAccessModifier = "protected" %}
 {% endif -%}
 {% if UseRequestAndResponseSerializationSettings -%}
-    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} RequestJsonSerializerSettings { get { return _requestSettings.Value; } }
-    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} ResponseJsonSerializerSettings { get { return _responseSettings.Value; } }
+    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} RequestJsonSerializerSettings { get { return _instanceRequestSettings ?? _requestSettings.Value; } }
+    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} ResponseJsonSerializerSettings { get { return _instanceResponseSettings ?? _responseSettings.Value; } }
 {% else -%}
-    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} JsonSerializerSettings { get { return _settings.Value; } }
+    {{ serializerSettingsAccessModifier }} {{ JsonSerializerSettingsType }} JsonSerializerSettings { get { return _instanceSettings ?? _settings.Value; } }
 {% endif -%}
 
 {% if GenerateUpdateJsonSerializerSettingsMethod -%}
@@ -141,6 +140,7 @@
 {%     endif -%}
 {% endif -%}
 
+    partial void Initialize();
 
 {% if GeneratePrepareRequestAndProcessResponseAsAsyncMethods == false -%}
     partial void PrepareRequest({{ HttpClientType }} client, System.Net.Http.HttpRequestMessage request, string url);

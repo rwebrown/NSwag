@@ -1,9 +1,9 @@
 {
-  "runtime": "Net70",
+  "runtime": "Net90",
   "defaultVariables": null,
   "documentGenerator": {
     "aspNetCoreToOpenApi": {
-      "project": "NSwag.Sample.NET70Minimal.csproj",
+      "project": "NSwag.Sample.NET90Minimal.csproj",
       "documentName": "v1",
       "msBuildProjectExtensionsPath": null,
       "configuration": null,

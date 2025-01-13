@@ -6,9 +6,6 @@
 // <author>Rico Suter, mail@rsuter.com</author>
 //-----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NJsonSchema;
 using NJsonSchema.CodeGeneration;
 
@@ -66,6 +63,9 @@ namespace NSwag.CodeGeneration.Models
         /// <summary>Gets the operation ID.</summary>
         public string Id => _operation.OperationId;
 
+        /// <summary>Gets the operation tags.</summary>
+        public List<string> Tags => _operation.Tags;
+
         /// <summary>Gets or sets the HTTP path (i.e. the absolute route).</summary>
         public string Path { get; set; }
 
@@ -85,13 +85,10 @@ namespace NSwag.CodeGeneration.Models
         public string HttpMethodLower => ConversionUtilities.ConvertToLowerCamelCase(HttpMethod.ToString(), false);
 
         /// <summary>Gets a value indicating whether the HTTP method is GET or DELETE or HEAD.</summary>
-        public bool IsGetOrDeleteOrHead =>
-            HttpMethod == OpenApiOperationMethod.Get ||
-            HttpMethod == OpenApiOperationMethod.Delete ||
-            HttpMethod == OpenApiOperationMethod.Head;
+        public bool IsGetOrDeleteOrHead => HttpMethod is OpenApiOperationMethod.Get or OpenApiOperationMethod.Delete or OpenApiOperationMethod.Head;
 
         /// <summary>Gets a value indicating whether the HTTP method is GET or HEAD.</summary>
-        public bool IsGetOrHead => HttpMethod == OpenApiOperationMethod.Get || HttpMethod == OpenApiOperationMethod.Head;
+        public bool IsGetOrHead => HttpMethod is OpenApiOperationMethod.Get or OpenApiOperationMethod.Head;
 
         // TODO: Remove this (may not work correctly)
         /// <summary>Gets or sets a value indicating whether the operation has a result type (i.e. not void).</summary>
@@ -111,7 +108,7 @@ namespace NSwag.CodeGeneration.Models
                     return "void";
                 }
 
-                if (response.Value.IsBinary(_operation) == true)
+                if (response.Value.IsBinary(_operation))
                 {
                     return _generator.GetBinaryResponseTypeName();
                 }
@@ -196,7 +193,7 @@ namespace NSwag.CodeGeneration.Models
         public IEnumerable<TParameterModel> PathParameters => Parameters.Where(p => p.Kind == OpenApiParameterKind.Path);
 
         /// <summary>Gets the query parameters.</summary>
-        public IEnumerable<TParameterModel> QueryParameters => Parameters.Where(p => p.Kind == OpenApiParameterKind.Query || p.Kind == OpenApiParameterKind.ModelBinding);
+        public IEnumerable<TParameterModel> QueryParameters => Parameters.Where(p => p.Kind is OpenApiParameterKind.Query or OpenApiParameterKind.ModelBinding);
 
         /// <summary>Gets a value indicating whether the operation has query parameters.</summary>
         public bool HasQueryParameters => QueryParameters.Any();
@@ -205,7 +202,7 @@ namespace NSwag.CodeGeneration.Models
         public IEnumerable<TParameterModel> HeaderParameters => Parameters.Where(p => p.Kind == OpenApiParameterKind.Header);
 
         /// <summary>Gets or sets a value indicating whether the accept header is defined in a parameter.</summary>
-        public bool HasAcceptHeaderParameterParameter => HeaderParameters.Any(p => p.Name.ToLowerInvariant() == "accept");
+        public bool HasAcceptHeaderParameterParameter => HeaderParameters.Any(p => p.Name.Equals("accept", StringComparison.OrdinalIgnoreCase));
 
         /// <summary>Gets a value indicating whether the operation has form parameters.</summary>
         public bool HasFormParameters => Parameters.Any(p => p.Kind == OpenApiParameterKind.FormData);
@@ -213,7 +210,7 @@ namespace NSwag.CodeGeneration.Models
         /// <summary>Gets a value indicating whether the operation consumes 'application/x-www-form-urlencoded'.</summary>
         public bool ConsumesFormUrlEncoded =>
             _operation.ActualConsumes?.Any(c => c == "application/x-www-form-urlencoded") == true ||
-            _operation.RequestBody?.Content.Any(mt => mt.Key == "application/x-www-form-urlencoded") == true;
+            _operation.ActualRequestBody?.Content.Any(mt => mt.Key == "application/x-www-form-urlencoded") == true;
 
         /// <summary>Gets the form parameters.</summary>
         public IEnumerable<TParameterModel> FormParameters => Parameters.Where(p => p.Kind == OpenApiParameterKind.FormData);
@@ -256,7 +253,7 @@ namespace NSwag.CodeGeneration.Models
                 }
 
                 return _operation.ActualConsumes?.FirstOrDefault() ??
-                    _operation.RequestBody?.Content.Keys.FirstOrDefault() ??
+                    _operation.ActualRequestBody?.Content.Keys.FirstOrDefault() ??
                     "application/json";
             }
         }
@@ -334,7 +331,7 @@ namespace NSwag.CodeGeneration.Models
             }
 
             var typeNameHint = !schema.HasTypeNameTitle ? ConversionUtilities.ConvertToUpperCamelCase(parameter.Name, true) : null;
-            var isNullable = parameter.IsRequired == false || parameter.IsNullable(_settings.CodeGeneratorSettings.SchemaType);
+            var isNullable = !parameter.IsRequired || parameter.IsNullable(_settings.CodeGeneratorSettings.SchemaType);
             return _resolver.Resolve(schema, isNullable, typeNameHint);
         }
 
@@ -347,8 +344,8 @@ namespace NSwag.CodeGeneration.Models
                 .ToList();
 
             var formDataSchema =
-                _operation?.RequestBody?.Content?.ContainsKey("multipart/form-data") == true ?
-                _operation.RequestBody.Content["multipart/form-data"]?.Schema.ActualSchema: null;
+                _operation?.ActualRequestBody?.Content?.ContainsKey("multipart/form-data") == true ?
+                _operation.ActualRequestBody.Content["multipart/form-data"]?.Schema.ActualSchema : null;
 
             if (formDataSchema != null && formDataSchema.ActualProperties.Count > 0)
             {

@@ -85,3 +85,4 @@ _ReSharper.Caches/
 
 /artifacts
 *.binlog
+*.gen
